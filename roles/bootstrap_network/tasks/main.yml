@@ -1,0 +1,37 @@
+---
+- name: Ensure network rule files are empty
+  copy: dest={{ item }} content=""
+  with_items: 
+  - /lib/udev/rules.d/75-persistent-net-generator.rules
+  - /etc/udev/rules.d/70-persistent-net.rules
+
+- name: Ensure firewall is off
+  shell: chkconfig {{ item }} off
+  with_items:
+  - iptables
+  - ip6tables
+
+- name: Disable selinux
+  lineinfile: >
+    dest=/etc/selinux/config
+    regexp='^SELINUX=.*' 
+    line='SELINUX=disabled'
+
+- name: Set host name
+  lineinfile: >
+    dest=/etc/sysconfig/network 
+    regexp='^HOSTNAME=.*' 
+    line='HOSTNAME={{ hostname }}'
+
+- name: Set default gateway
+  lineinfile: >
+    dest=/etc/sysconfig/network 
+    regexp='^GATEWAY=.*' 
+    line='GATEWAY={{ gateway }}'
+
+- name: "Write network scripts for adapters"
+  template: >
+    dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.key }}
+    src=ifcfg-ethX
+    backup=yes
+  with_dict: adapters

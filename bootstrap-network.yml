@@ -1,0 +1,29 @@
+---
+- hosts: controller
+  remote_user: root
+  roles:
+  - role: bootstrap_network
+    hostname: "{{ controller_hostname }}"
+    gateway: "{{ default_gateway }}"
+    adapters: 
+      eth0: { ip_address: "{{ controller_management_ip }}" }
+
+- hosts: network
+  remote_user: root
+  roles:
+  - role: bootstrap_network
+    hostname: "{{ network_hostname }}"
+    gateway: "{{ default_gateway }}"
+    adapters: 
+      eth0: { ip_address: "{{ network_management_ip }}" }
+      eth1: { ip_address: "{{ network_instance_tunnel_ip }}" }
+
+- hosts: compute1
+  remote_user: root
+  roles:
+  - role: bootstrap_network
+    hostname: "{{ compute1_hostname }}"
+    gateway: "{{ default_gateway }}"
+    adapters: 
+      eth0: { ip_address: "{{ compute1_management_ip }}" }
+      eth1: { ip_address: "{{ compute1_instance_tunnel_ip }}" }

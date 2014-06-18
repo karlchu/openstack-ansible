@@ -1,0 +1,3 @@
+---
+- name: Ensure NTP is installed
+  yum: pkg=ntp state=present
