@@ -1,13 +1,2 @@
 ---
 default_gateway: 10.0.0.2
-
-controller_hostname: controller
-controller_management_ip: 10.0.0.11
-
-network_hostname: network
-network_management_ip: 10.0.0.21
-network_instance_tunnel_ip: 10.0.1.21
-
-compute1_hostname: compute1
-compute1_management_ip: 10.0.0.31
-compute1_instance_tunnel_ip: 10.0.1.31
