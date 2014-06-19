@@ -29,9 +29,15 @@
     regexp='^GATEWAY=.*' 
     line='GATEWAY={{ gateway }}'
 
-- name: "Write network scripts for adapters"
+- name: Write network scripts for adapters
   template: >
     dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.key }}
     src=ifcfg-ethX
     backup=yes
   with_dict: adapters
+
+- name: Write hosts file for name resolution
+  template: >
+    dest=/etc/hosts
+    src=hosts
+    backup=yes

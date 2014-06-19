@@ -1,4 +1,10 @@
 ---
+- hosts: all
+  remote_user: root
+  tasks:
+  - name: Run an arbitrary command on all host to gather all facts
+    raw: hostname
+
 - hosts: controller
   remote_user: root
   roles:
