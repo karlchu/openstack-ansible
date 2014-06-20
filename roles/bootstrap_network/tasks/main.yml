@@ -41,3 +41,11 @@
     dest=/etc/hosts
     src=hosts
     backup=yes
+
+- name: Add static route
+  lineinfile: >
+    dest=/etc/sysconfig/network-scripts/route-{{ item.key }}
+    line='{{ item.value.ip_address }}/24 dev {{ item.key }}'
+    create=yes
+  with_dict: adapters
+  notify: Restart network
