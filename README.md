@@ -28,7 +28,7 @@ Once the machines are ready and running, edit the bootstrap-network-inventory.in
 
 To run the playbook, run the following command:
 ```
-  % ansible-playbook -i open-stack-inventory.ini --ask-vault-pass open-stack-playbook.yml
+  % ansible-playbook -i open-stack-inventory.ini open-stack-playbook.yml --extra-vars @passwords.yml --ask-vault-pass
 ```
 
 The vault password is V..1
