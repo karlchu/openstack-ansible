@@ -1,0 +1,33 @@
+---
+- name: Ensure MySQL is installed
+  yum: "pkg={{ item }} state=present"
+  with_items:
+  - mysql
+  - mysql-server
+- name: Bind mysql only to the management IP
+  ini_file: >
+    dest=/etc/my.cnf
+    section=mysqld
+    option={{ item.key }}
+    value={{ item.value }}
+    backup=yes
+  with_dict:
+    bind-address: "{{ management_ip }}"
+    default-storage-engine: "innodb"
+    innodb_file_per_table: "ON"
+    collation-server: "utf8_general_ci"
+    init-connect: "'SET NAMES utf8'"
+    character-set-server: "utf8"
+  notify: Restart mysqld
+- name: Ensure mysqld is enabled and running
+  service: name=mysqld enabled=yes state=started
+
+- name: Run mysql_install_db
+  shell: creates=/var/lib/mysql/mysql mysql_install_db
+
+- name: Set MySQL root password
+  shell: |
+    creates=/var/lib/mysql/mysql/root-password.set
+    /usr/bin/mysqladmin -u root password '{{ MYSQL_ROOT_PASSWORD }}'
+    /usr/bin/mysqladmin -u root -h controller password '{{ MYSQL_ROOT_PASSWORD }}'
+    date > /var/lib/mysql/mysql/root-password.set

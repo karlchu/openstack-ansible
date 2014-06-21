@@ -1,6 +1,8 @@
 ---
 - name: Ensure NTP is installed
   yum: pkg=ntp state=present
-
 - name: Ensure NTP service is running
   service: name=ntpd enabled=yes state=started
+
+- name: Ensure MySQL-python library is installed
+  yum: pkg=MySQL-python state=present

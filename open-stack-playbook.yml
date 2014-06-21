@@ -6,3 +6,5 @@
 
 - hosts: controller
   user: root
+  roles:
+  - openstack-database
