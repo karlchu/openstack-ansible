@@ -1,5 +1,8 @@
 ---
-- hosts: controller
+- hosts: all
   user: root
   roles:
   - openstack-common
+
+- hosts: controller
+  user: root
