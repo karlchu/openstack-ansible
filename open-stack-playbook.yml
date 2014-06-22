@@ -8,3 +8,4 @@
   user: root
   roles:
   - openstack-database
+  - openstack-messaging-server

@@ -1,0 +1,13 @@
+---
+- name: Ensure require packages installed
+  yum: "pkg={{ item }} state=present"
+  with_items:
+  - qpid-cpp-server
+- name: Configure QPID
+  lineinfile: |
+    dest=/etc/qpidd.conf
+    regexp='^auth=.*' 
+    line='auth=no'
+  notify: Restart qpidd
+- name: Ensure qpidd is enabled and running
+  service: name=qpidd enabled=yes state=started
