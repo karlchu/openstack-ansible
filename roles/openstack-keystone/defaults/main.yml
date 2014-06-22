@@ -1,0 +1,4 @@
+---
+db_host: localhost
+db: keystone
+db_user: keystone

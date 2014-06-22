@@ -9,3 +9,4 @@
   roles:
   - openstack-database
   - openstack-messaging-server
+  - openstack-keystone

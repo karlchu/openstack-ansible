@@ -4,4 +4,43 @@
   with_items: 
   - openstack-keystone
   - python-keystoneclient
-  
+
+- name: Create the keystone database
+  mysql_db: name={{ db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
+- name: Ensure keystone database user exist
+  mysql_user: |
+    name={{ db_user }}
+    password={{ KEYSTONE_DBPASS }}
+    host={{ item }}
+    priv={{ db }}.*:ALL
+    login_host={{ db_host }}
+    login_user=root
+    login_password={{ MYSQL_ROOT_PASSWORD }}
+  with_items:
+  - localhost
+  - "%"
+
+- name: DB sync for keystone
+  shell: |
+    creates=/etc/keystone/db.synced
+    /usr/bin/keystone-manage db_sync
+    date >> /etc/keystone/db.synced
+
+- name: Create certs for the keystone
+  shell: |
+    creates=/etc/keystone/ssl/certs/ca.pem 
+    /usr/bin/keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
+    chmod 777 /var/lock
+    chown -R keystone:keystone /etc/keystone/ssl
+    chmod -R o-rwx /etc/keystone/ssl
+  notify: Restart keystone service
+
+- name: Enable and start the keystone service
+  service: name=openstack-keystone enabled=yes state=started
+
+- name: Set up cron job to purge expired tokens hourly
+  cron: |
+    name="Purge expired keystone tokens"
+    user=keystone
+    special_time=hourly
+    job="/usr/bin/keystone-manage token_flush >/var/log/keystone/keystone-tokenflush.log 2>&1"
