@@ -1,8 +1,16 @@
 ---
-- name: Ensure NTP is installed
-  yum: pkg=ntp state=present
+# - command: yum install -y http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/rdo-release-icehouse-3.noarch.rpm
+
+- name: Ensure required packages are installed
+  yum: pkg={{ item }} state=present
+  with_items:
+  - "http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm"
+  - "http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/rdo-release-icehouse-3.noarch.rpm"
+  - ntp
+  - MySQL-python
+  - yum-plugin-priorities
+  - openstack-utils
+  - openstack-selinux
+
 - name: Ensure NTP service is running
   service: name=ntpd enabled=yes state=started
-
-- name: Ensure MySQL-python library is installed
-  yum: pkg=MySQL-python state=present
