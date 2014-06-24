@@ -16,7 +16,7 @@ A few minimal manual steps has to be done before bootstraping the networking in 
 1. Disable firewall; i.e. `chkconfig iptables off; chkconfig ip6tables off`
 1. root is able to ssh using a private key; i.e. the public key is added to `/root/.ssh/authorized_keys`
 
-Once the machines are ready and running, edit the bootstrap-network-inventory.ini file and update the current DHCP-assigned IPs. This allows the bootstrap-network.yml playbook to hit each box and configure the network automatically for you.
+Once the machines are ready and running, **edit the `bootstrap-network-inventory.ini` file and update the current DHCP-assigned IPs**. This allows the bootstrap-network.yml playbook to hit each box and configure the network automatically for you.
 
 `% ansible-playbook -i bootstrap-network-inventory.ini bootstrap-network.yml`
 
@@ -25,6 +25,8 @@ Once the machines are ready and running, edit the bootstrap-network-inventory.in
 * `% yum install -y libselinux-python`
 
 # Running the OpenStack playbook #
+
+Before running the playbook, copy the `passwords.yml.template` file to `passwords.yml` and update the passwords and other information in that file.
 
 To run the playbook, run the following command:
 ```
