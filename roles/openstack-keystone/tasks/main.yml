@@ -57,21 +57,44 @@
     special_time=hourly
     job="/usr/bin/keystone-manage token_flush >/var/log/keystone/keystone-tokenflush.log 2>&1"
 
-- name: "Create the 'admin' user and role, and the service tenant"
-  shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://localhost:{{ keystone_admin_port }}/v2.0
-    if ! keystone user-get admin ; then keystone user-create --name=admin --pass={{ ADMIN_PASS }} --email={{ ADMIN_EMAIL }} ; fi
-    if ! keystone role-get admin ; then keystone role-create --name=admin ; fi
-    if ! keystone tenant-get admin ; then keystone tenant-create --name=admin --description="Admin Tenant" ; fi
-    if ! keystone user-role-list --user admin --tenant admin | grep ' admin ' ; then keystone user-role-add --user=admin --tenant=admin --role=admin ; fi
-    if ! keystone user-role-list --user admin --tenant admin | grep ' _member_ ' ;  then keystone user-role-add --user=admin --tenant=admin --role=_member_ ; fi
-    if ! keystone tenant-get service; then keystone tenant-create --name=service --description="Service Tenant" ; fi
+- name: "Ensure the 'admin' tenant exists"
+  keystone_user: >
+    tenant=admin tenant_description="Admin Tenant"
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
 
-- name: "Create the 'demo' user and role"
-  shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://localhost:{{ keystone_admin_port }}/v2.0
-    if ! keystone user-get demo ; then keystone user-create --name=demo --pass={{ DEMO_PASS }} --email={{ DEMO_EMAIL }} ; fi
-    if ! keystone tenant-get demo ; then keystone tenant-create --name=demo --description="Demo Tenant" ; fi
-    if ! keystone user-role-list --user demo --tenant demo | grep ' _member_ ' ; then keystone user-role-add --user=demo --role=_member_ --tenant=demo ; fi
+- name: "Ensure the 'admin' user exists"
+  keystone_user: >
+    user=admin password={{ ADMIN_PASS }} email={{ ADMIN_EMAIL }} tenant=admin
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
+
+- name: "Ensure the 'admin' role exists"
+  keystone_user: >
+    role=admin user=admin tenant=admin
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
+
+- name: "Ensure the 'service' tenant exists"
+  keystone_user: >
+    tenant=service tenant_description="Service Tenant"
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
+
+- name: "Ensure the 'demo' tenant exists"
+  keystone_user: >
+    tenant=demo tenant_description="Demo Tenant"
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
+
+- name: "Ensure the 'demo' user exists"
+  keystone_user: >
+    user=demo password={{ DEMO_PASS }} email={{ DEMO_EMAIL }} tenant=demo
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
+
+- name: "Ensure the 'admin' role exists"
+  keystone_user: >
+    role=demo user=demo tenant=demo
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
