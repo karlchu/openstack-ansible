@@ -1,6 +1,6 @@
 # README.md #
 
-# Bootstraping networking #
+## Bootstraping networking ##
 
 Before we can run the OpenStack playbook on the nodes, we must prepare the networking on the nodes.
 
@@ -24,7 +24,7 @@ Once the machines are ready and running, **edit the `bootstrap-network-inventory
 
 * `% yum install -y libselinux-python`
 
-# Running the OpenStack playbook #
+## Running the OpenStack playbook ##
 
 Before running the playbook, copy the `passwords.yml.template` file to `passwords.yml` and update the passwords and other information in that file.
 
