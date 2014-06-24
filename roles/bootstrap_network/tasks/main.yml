@@ -48,4 +48,4 @@
     line='{{ item.value.ip_address }}/24 dev {{ item.key }}'
     create=yes
   with_dict: adapters
-  notify: Restart network
+  # notify: Restart network

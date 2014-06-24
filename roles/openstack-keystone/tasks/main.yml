@@ -5,22 +5,34 @@
   - openstack-keystone
   - python-keystoneclient
 
+- name: Configure keystone
+  template: |
+    dest=/etc/keystone/keystone.conf
+    src=keystone.conf
+    backup=yes
+  notify: Restart keystone service
+
 - name: Create the keystone database
-  mysql_db: name={{ db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
+  mysql_db: name={{ keystone_db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
 - name: Ensure keystone database user exist
   mysql_user: |
-    name={{ db_user }}
+    name={{ keystone_db_user }}
     password={{ KEYSTONE_DBPASS }}
     host={{ item }}
-    priv={{ db }}.*:ALL
-    login_host={{ db_host }}
+    priv={{ keystone_db }}.*:ALL
+    login_host={{ keystone_db_host }}
     login_user=root
     login_password={{ MYSQL_ROOT_PASSWORD }}
   with_items:
   - localhost
   - "%"
 
+- name: Change ownership of all files to keystone
+  file: path=/etc/keystone recurse=yes owner=keystone group=keystone state=directory
+
 - name: DB sync for keystone
+  sudo: yes
+  sudo_user: keystone
   shell: |
     creates=/etc/keystone/db.synced
     /usr/bin/keystone-manage db_sync
@@ -44,3 +56,22 @@
     user=keystone
     special_time=hourly
     job="/usr/bin/keystone-manage token_flush >/var/log/keystone/keystone-tokenflush.log 2>&1"
+
+- name: "Create the 'admin' user and role, and the service tenant"
+  shell: |
+    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
+    export OS_SERVICE_ENDPOINT=http://localhost:{{ keystone_admin_port }}/v2.0
+    if ! keystone user-get admin ; then keystone user-create --name=admin --pass={{ ADMIN_PASS }} --email={{ ADMIN_EMAIL }} ; fi
+    if ! keystone role-get admin ; then keystone role-create --name=admin ; fi
+    if ! keystone tenant-get admin ; then keystone tenant-create --name=admin --description="Admin Tenant" ; fi
+    if ! keystone user-role-list --user admin --tenant admin | grep ' admin ' ; then keystone user-role-add --user=admin --tenant=admin --role=admin ; fi
+    if ! keystone user-role-list --user admin --tenant admin | grep ' _member_ ' ;  then keystone user-role-add --user=admin --tenant=admin --role=_member_ ; fi
+    if ! keystone tenant-get service; then keystone tenant-create --name=service --description="Service Tenant" ; fi
+
+- name: "Create the 'demo' user and role"
+  shell: |
+    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
+    export OS_SERVICE_ENDPOINT=http://localhost:{{ keystone_admin_port }}/v2.0
+    if ! keystone user-get demo ; then keystone user-create --name=demo --pass={{ DEMO_PASS }} --email={{ DEMO_EMAIL }} ; fi
+    if ! keystone tenant-get demo ; then keystone tenant-create --name=demo --description="Demo Tenant" ; fi
+    if ! keystone user-role-list --user demo --tenant demo | grep ' _member_ ' ; then keystone user-role-add --user=demo --role=_member_ --tenant=demo ; fi

@@ -1,4 +1,6 @@
 ---
-db_host: localhost
-db: keystone
-db_user: keystone
+keystone_db_host: localhost
+keystone_db: keystone
+keystone_db_user: keystone
+
+keystone_admin_port: 35357
