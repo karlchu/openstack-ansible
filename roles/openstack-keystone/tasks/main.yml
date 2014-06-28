@@ -98,3 +98,25 @@
     tenant=service tenant_description="Service Tenant"
     token={{ KEYSTONE_ADMIN_TOKEN }}
     endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
+
+- name: Create a service entry for the Identity Service
+  shell: |
+    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
+    export OS_SERVICE_ENDPOINT=http://localhost:{{ keystone_admin_port }}/v2.0
+    if ! keystone service-get keystone
+    then 
+      keystone service-create --name=keystone --type=identity --description="OpenStack Identity"
+    fi
+
+- name: Check identity service API endpoint exists
+  shell: "keystone --os-username=admin --os-password={{ ADMIN_PASS }} --os-auth-url=http://localhost:{{ keystone_admin_port }}/v2.0 --os-tenant-name=admin endpoint-get --service=identity"
+  register: check_endpoint_result
+  ignore_errors: True
+
+- name: Specify API endpoints for identity service
+  when: check_endpoint_result.rc != 0
+  shell: |
+    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
+    export OS_SERVICE_ENDPOINT=http://localhost:{{ keystone_admin_port }}/v2.0
+    export SERVICE_ID=$(keystone service-list | awk '/ identity / {print $2}')
+    keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://controller:5000/v2.0 --internalurl=http://controller:5000/v2.0 --adminurl=http://controller:{{ keystone_admin_port }}/v2.0
