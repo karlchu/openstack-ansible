@@ -1,0 +1,14 @@
+---
+- name: Install client packages
+  yum: "pkg={{ item }} state=present"
+  with_items:
+  - python-pip
+  - python-ceilometerclient
+  - python-cinderclient
+  - python-glanceclient
+  - python-heatclient
+  - python-keystoneclient
+  - python-neutronclient
+  - python-novaclient
+  - python-swiftclient
+  - python-troveclient
