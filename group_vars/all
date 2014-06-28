@@ -1,2 +1,4 @@
 ---
 default_gateway: 10.0.0.2
+
+db_host: controller

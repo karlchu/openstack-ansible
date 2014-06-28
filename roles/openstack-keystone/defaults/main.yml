@@ -1,5 +1,4 @@
 ---
-keystone_db_host: localhost
 keystone_db: keystone
 keystone_db_user: keystone
 

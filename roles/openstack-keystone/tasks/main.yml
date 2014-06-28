@@ -20,7 +20,7 @@
     password={{ KEYSTONE_DBPASS }}
     host={{ item }}
     priv={{ keystone_db }}.*:ALL
-    login_host={{ keystone_db_host }}
+    login_host={{ db_host }}
     login_user=root
     login_password={{ MYSQL_ROOT_PASSWORD }}
   with_items:
