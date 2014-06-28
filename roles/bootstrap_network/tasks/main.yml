@@ -48,4 +48,9 @@
     line='{{ item.value.ip_address }}/24 dev {{ item.key }}'
     create=yes
   with_dict: adapters
-  # notify: Restart network
+
+- name: Reboot
+  command: shutdown -r now "Reboot after network update"
+  async: 0
+  poll: 0
+  ignore_errors: true
