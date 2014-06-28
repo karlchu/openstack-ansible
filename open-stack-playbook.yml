@@ -10,5 +10,4 @@
   - openstack-database
   - openstack-messaging-server
   - openstack-keystone
-  - openstack-client
-  
+  - openstack-glance

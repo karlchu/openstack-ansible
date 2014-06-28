@@ -1,0 +1,46 @@
+---
+- name: Ensure relavant packages are installed
+  yum: "name={{ item }} state=installed"
+  with_items: 
+  - openstack-glance 
+  - python-glanceclient
+
+- name: Configure glance-api
+  template: |
+    dest=/etc/glance/glance-api.conf
+    src=glance-api.conf
+    backup=yes
+  notify: Restart glance-api service
+
+- name: Configure glance-registry
+  template: |
+    dest=/etc/glance/glance-registry.conf
+    src=glance-registry.conf
+    backup=yes
+  notify: Restart glance-registry service
+
+- name: Create the glance database
+  mysql_db: name={{ glance_db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
+- name: Ensure glance database user exist
+  mysql_user: |
+    name={{ glance_db_user }}
+    password={{ GLANCE_DBPASS }}
+    host={{ item }}
+    priv={{ glance_db }}.*:ALL
+    login_host={{ db_host }}
+    login_user=root
+    login_password={{ MYSQL_ROOT_PASSWORD }}
+  with_items:
+  - localhost
+  - "%"
+
+- name: Change ownership of all files to glance
+  file: path=/etc/glance recurse=yes owner=glance group=glance state=directory
+
+- name: DB sync for glance
+  sudo: yes
+  sudo_user: glance
+  shell: |
+    creates=/etc/glance/db.synced
+    /usr/bin/glance-manage db_sync
+    date >> /etc/glance/db.synced
