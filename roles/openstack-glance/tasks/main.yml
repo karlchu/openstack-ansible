@@ -44,3 +44,42 @@
     creates=/etc/glance/db.synced
     /usr/bin/glance-manage db_sync
     date >> /etc/glance/db.synced
+
+- name: "Ensure the 'glance' user exists"
+  keystone_user: >
+    user=glance password={{ GLANCE_PASS }} email={{ ADMIN_EMAIL }} tenant=service
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+  delegate_to: "{{ keystone_host }}"
+
+- name: "Ensure the 'admin' role exists"
+  keystone_user: >
+    role=admin user=glance tenant=service
+    token={{ KEYSTONE_ADMIN_TOKEN }}
+    endpoint=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+  delegate_to: "{{ keystone_host }}"
+
+- name: Create a service entry for the OpenStack Image Service
+  shell: |
+    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
+    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+    if ! keystone service-get glance
+    then 
+      keystone service-create --name=glance --type=image --description="OpenStack Image Service"
+    fi
+  delegate_to: "{{ keystone_host }}"
+
+- name: Check OpenStack Image Service API endpoint exists
+  shell: "keystone --os-username=admin --os-password={{ ADMIN_PASS }} --os-auth-url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0 --os-tenant-name=admin endpoint-get --service=image"
+  register: check_endpoint_result
+  ignore_errors: True
+  delegate_to: "{{ keystone_host }}"
+
+- name: Specify API endpoints for identity service
+  when: check_endpoint_result.rc != 0
+  shell: |
+    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
+    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+    export SERVICE_ID=$(keystone service-list | awk '/ image / {print $2}')
+    keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ glance_host }}:{{ glance_port }}/v2.0 --internalurl=http://{{ glance_host }}:{{ glance_port }}/v2.0 --adminurl=http://{{ glance_host }}:{{ glance_port }}/v2.0
+  delegate_to: "{{ keystone_host }}"

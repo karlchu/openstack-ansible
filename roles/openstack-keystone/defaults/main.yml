@@ -1,5 +1,3 @@
 ---
 keystone_db: keystone
 keystone_db_user: keystone
-
-keystone_admin_port: 35357

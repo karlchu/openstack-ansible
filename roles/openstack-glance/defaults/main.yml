@@ -1,3 +1,5 @@
 ---
+keystone_host: controller
+
 glance_db: glance
 glance_db_user: glance

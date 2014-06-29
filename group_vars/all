@@ -3,3 +3,10 @@ default_gateway: 10.0.0.2
 
 db_host: controller
 qpid_host: controller
+
+keystone_host: controller
+keystone_port: 5000
+keystone_admin_port: 35357
+
+glance_host: controller
+glance_port: 9292
