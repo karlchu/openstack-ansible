@@ -28,6 +28,7 @@
 - name: Set MySQL root password
   shell: |
     creates=/var/lib/mysql/mysql/root-password.set
+    /usr/bin/mysql -u root mysql -e "DELETE FROM mysql.user WHERE User=''; FLUSH PRIVILEGES;"
     /usr/bin/mysqladmin -u root password '{{ MYSQL_ROOT_PASSWORD }}'
     /usr/bin/mysqladmin -u root -h controller password '{{ MYSQL_ROOT_PASSWORD }}'
     date > /var/lib/mysql/mysql/root-password.set
