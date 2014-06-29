@@ -75,7 +75,7 @@
   ignore_errors: True
   delegate_to: "{{ keystone_host }}"
 
-- name: Specify API endpoints for identity service
+- name: Specify API endpoints for image service
   when: check_endpoint_result.rc != 0
   shell: |
     export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
@@ -83,3 +83,9 @@
     export SERVICE_ID=$(keystone service-list | awk '/ image / {print $2}')
     keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ glance_host }}:{{ glance_port }}/v2.0 --internalurl=http://{{ glance_host }}:{{ glance_port }}/v2.0 --adminurl=http://{{ glance_host }}:{{ glance_port }}/v2.0
   delegate_to: "{{ keystone_host }}"
+
+- name: Enable and start the image services
+  service: name={{ item }} enabled=yes state=started
+  with_items:
+  - openstack-glance-api
+  - openstack-glance-registry
