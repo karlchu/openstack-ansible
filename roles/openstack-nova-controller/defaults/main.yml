@@ -1,0 +1,13 @@
+---
+keystone_host: controller
+
+nova_db: nova
+nova_db_user: nova
+
+nova_services:
+- openstack-nova-api
+- openstack-nova-cert
+- openstack-nova-consoleauth 
+- openstack-nova-scheduler 
+- openstack-nova-conductor 
+- openstack-nova-novncproxy 

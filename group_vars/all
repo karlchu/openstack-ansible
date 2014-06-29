@@ -1,12 +1,23 @@
 ---
+# Network
 default_gateway: 10.0.0.2
 
+# Database
 db_host: controller
+
+# Messaging
+rpc_backend: qpid
 qpid_host: controller
 
+# Identity
 keystone_host: controller
 keystone_port: 5000
 keystone_admin_port: 35357
 
+# Images
 glance_host: controller
 glance_port: 9292
+
+# Nova Controller
+nova_controller_host: controller
+nova_controller_port: 8774
