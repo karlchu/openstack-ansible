@@ -1,0 +1,18 @@
+---
+- name: Ensure relavant packages are installed
+  yum: "name={{ item }} state=installed"
+  with_items: 
+  - openstack-nova-compute
+
+# TODO: Test for suitability to run KVM; if not, we need to run QEMU
+
+- name: Configure nova compute service
+  template: |
+    dest=/etc/nova/nova.conf
+    src=nova.conf
+    backup=yes
+  notify: Restart nova compute service
+
+- name: Enable and start the nova compute services
+  service: name={{ item }} enabled=yes state=started
+  with_items: nova_compute_services

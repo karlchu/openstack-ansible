@@ -1,0 +1,4 @@
+---
+- name: Restart nova compute service
+  service: name={{ item }} state=restarted
+  with_items: nova_compute_services

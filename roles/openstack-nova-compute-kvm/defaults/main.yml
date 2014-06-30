@@ -1,0 +1,8 @@
+---
+nova_db: nova
+nova_db_user: nova
+
+nova_compute_services:
+- libvirtd
+- messagebus
+- openstack-nova-compute

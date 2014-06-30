@@ -12,3 +12,8 @@
   - openstack-keystone
   - openstack-glance
   - openstack-nova-controller
+
+- hosts: compute-kvm
+  user: root
+  roles:
+  - openstack-nova-compute-kvm
