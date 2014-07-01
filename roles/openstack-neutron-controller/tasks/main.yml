@@ -52,3 +52,25 @@
     export SERVICE_ID=$(keystone service-list | awk '/ network / {print $2}')
     keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s --internalurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s --adminurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s
   delegate_to: "{{ keystone_host }}"
+
+- name: Ensure relavant packages are installed
+  yum: "name={{ item }} state=installed"
+  with_items: 
+  - openstack-neutron
+  - openstack-neutron-ml2
+  - python-neutronclient
+
+- name: Get Nova admin tenant ID
+  shell: |
+    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
+    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+    keystone tenant-list | awk '/ service / { print $2 }'
+  register: nova_admin_tenant_id
+  delegate_to: "{{ keystone_host }}"
+
+- name: Configure Neutron
+  template: |
+    dest=/etc/neutron/neutron.conf
+    src=neutron.conf
+    backup=yes
+  # notify: Restart neutron services
