@@ -21,3 +21,6 @@ glance_port: 9292
 # Nova Controller
 nova_controller_host: controller
 nova_controller_port: 8774
+
+neutron_controller_host: controller
+neutron_controller_port: 9696
