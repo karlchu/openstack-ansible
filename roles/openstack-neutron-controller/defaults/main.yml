@@ -1,0 +1,5 @@
+---
+keystone_host: controller
+
+neutron_db: neutron
+neutron_db_user: neutron

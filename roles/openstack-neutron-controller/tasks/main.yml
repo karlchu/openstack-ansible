@@ -1,0 +1,15 @@
+---
+- name: Create the neutron database
+  mysql_db: name={{ neutron_db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
+- name: Ensure neutron database user exist
+  mysql_user: |
+    name={{ neutron_db_user }}
+    password={{ NEUTRON_DBPASS }}
+    host={{ item }}
+    priv={{ neutron_db }}.*:ALL
+    login_host={{ db_host }}
+    login_user=root
+    login_password={{ MYSQL_ROOT_PASSWORD }}
+  with_items:
+  - localhost
+  - "%"

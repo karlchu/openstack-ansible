@@ -12,6 +12,7 @@
   - openstack-keystone
   - openstack-glance
   - openstack-nova-controller
+  - openstack-neutron-controller
 
 - hosts: compute-kvm
   user: root
