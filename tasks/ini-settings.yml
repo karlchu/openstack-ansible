@@ -1,0 +1,12 @@
+---
+- name: Settings in {{ file }} 
+  ini_file: > 
+    dest={{ file }}
+    section={{ item.0.name }}
+    option={{ item.1.0 }}
+    value={{ item.1.1 }}
+    backup=yes
+  with_subelements:
+  - sections
+  - settings
+

@@ -1,0 +1,10 @@
+---
+- name: Restart compute services
+  service: name={{ item }} state=restarted
+  with_items:
+  - openstack-nova-api
+  - openstack-nova-scheduler
+  - openstack-nova-conductor
+
+- name: Restart neutron services
+  service: name=neutron-server state=restarted
