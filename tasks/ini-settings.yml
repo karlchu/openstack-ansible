@@ -1,4 +1,15 @@
 ---
+# Usage:
+# - name: Arbitrary description of the modifications
+#   include: relative/path/to/ini-settings.yml
+#   vars:
+#     file: "Path to the file to be modified"
+#     sections: # A hash keyed by the name of the section to be modified
+#     - name: name_of_the_section
+#       settings:
+#       - [ "option_name1", "option_value1" ]
+#       - [ "option_name2", "option_value2" ]
+
 - name: Settings in {{ file }} 
   ini_file: > 
     dest={{ file }}
@@ -6,7 +17,7 @@
     option={{ item.1.0 }}
     value={{ item.1.1 }}
     backup=yes
+  delegate_to: "{{ delegate_host|default(inventory_hostname) }}"
   with_subelements:
   - sections
   - settings
-

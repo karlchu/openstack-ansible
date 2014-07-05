@@ -1,0 +1,152 @@
+---
+- name: Enable kernel networking functions
+  include: ../../../tasks/config-settings.yml
+  vars:
+    file: /etc/sysctl.conf
+    settings:
+      net.ipv4.ip_forward: 1
+      net.ipv4.conf.all.rp_filter: 0
+      net.ipv4.conf.default.rp_filter: 0
+- name: Apply changes to sysctl
+  command: sysctl -e -p
+
+- name: Ensure required packages installed
+  yum: "name={{ item }} state=installed"
+  with_items: 
+  - openstack-neutron
+  - openstack-neutron-ml2
+  - openstack-neutron-openvswitch
+
+- name: Configure Networking to use the Identity service for authentication
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections: 
+    - name: DEFAULT
+      settings:
+      - [ "auth_strategy", "keystone" ]
+    - name: keystone_authtoken
+      settings:
+      - [ "auth_uri", "http://{{ keystone_host }}:5000" ]
+      - [ "auth_host", "{{ keystone_host }}" ]
+      - [ "auth_protocol", "http" ]
+      - [ "auth_port", "{{ keystone_admin_port }}" ]
+      - [ "admin_tenant_name", "service" ]
+      - [ "admin_user", "neutron" ]
+      - [ "admin_password", "{{ NEUTRON_PASS }}" ]
+
+- name: Configure Networking to use the message broker
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "rpc_backend", "neutron.openstack.common.rpc.impl_qpid" ]
+      - [ "qpid_hostname", "{{ qpid_host }}" ]
+
+- name: Configure Networking to use the Modular Layer 2 (ML2) plug-in
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "core_plugin", "ml2" ]
+      - [ "service_plugins", "router" ]
+
+- name: Configure the Layer-3 agent 
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/l3_agent.ini
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "interface_driver", "neutron.agent.linux.interface.OVSInterfaceDriver" ]
+      - [ "use_namespaces", "True" ]
+
+- name: Configure the DHCP agent
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/dhcp_agent.ini
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "interface_driver", "neutron.agent.linux.interface.OVSInterfaceDriver" ]
+      - [ "dhcp_driver", "neutron.agent.linux.dhcp.Dnsmasq" ]
+      - [ "use_namespaces", "True" ]
+
+- name: Configure the metadata agent
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/metadata_agent.ini
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "auth_url", "http://controller:5000/v2.0" ]
+      - [ "auth_region", "regionOne" ]
+      - [ "admin_tenant_name", "service" ]
+      - [ "admin_user", "neutron" ]
+      - [ "admin_password", "{{ NEUTRON_PASS }}" ]
+      - [ "nova_metadata_ip", "controller" ]
+      - [ "metadata_proxy_shared_secret", "{{ METADATA_SECRET }}" ]
+
+- name: Configure Compute to use the metadata service
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/nova/nova.conf
+    delegate_host: "{{ nova_controller_host }}"
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "service_neutron_metadata_proxy", "true" ]
+      - [ "neutron_metadata_proxy_shared_secret", "{{ METADATA_SECRET }}" ]
+
+- name: Configure the Modular Layer 2 (ML2) plug-in
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/plugins/ml2/ml2_conf.ini
+    sections:
+    - name: ml2
+      settings:
+      - [ "type_drivers", "gre" ]
+      - [ "tenant_network_types", "gre" ]
+      - [ "mechanism_drivers", "openvswitch" ]
+    - name: ml2_type_gre
+      settings:
+      - [ "tunnel_id_ranges", "1:1000" ]
+    - name: ovs
+      settings:
+      - [ "local_ip", "{{ ansible_eth1.ipv4.address }}" ]
+      - [ "tunnel_type", "gre" ]
+      - [ "enable_tunneling", "True" ]
+    - name: securitygroup
+      settings:
+      - [ "firewall_driver", "neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver" ]
+      - [ "enable_security_group", "True" ]
+
+- name: Enable and start the keystone service
+  service: name=openvswitch enabled=yes state=started
+
+- name: Ensure integration bridge exist
+  shell: if ! ovs-vsctl br-exists br-int; then ovs-vsctl add-br br-int; fi
+
+- name: Ensure external bridge exist
+  shell: if ! ovs-vsctl br-exists br-ex; then ovs-vsctl add-br br-ex; fi
+
+- name: Ensure a port exists to the external bridge
+  shell: if ! ovs-vsctl list-ports br-ex | grep eth2; then ovs-vsctl add-port br-ex eth2; fi
+
+- name: Ensure symlink to plug-in configuration
+  file: path=/etc/neutron/plugin.ini state=link src=/etc/neutron/plugins/ml2/ml2_conf.ini
+
+- name: Fix packaging bug
+  shell: "sed --in-place=bak 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /etc/init.d/neutron-openvswitch-agent"
+
+- name: Ensure services are enabled and running
+  service: "name={{ item }} enabled=yes state=started"
+  with_items:
+  - neutron-openvswitch-agent
+  - neutron-l3-agent
+  - neutron-dhcp-agent
+  - neutron-metadata-agent

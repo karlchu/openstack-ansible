@@ -18,3 +18,8 @@
   user: root
   roles:
   - openstack-nova-compute-kvm
+
+- hosts: network
+  user: root
+  roles:
+  - openstack-neutron-network

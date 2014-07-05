@@ -1,0 +1,16 @@
+---
+# Usage:
+# - name: Arbitrary description of the modifications
+#   include: relative/path/to/config-settings.yml
+#   vars:
+#     file: "Path to the file to be modified"
+#     settings:
+#       setting1: value1
+#       setting2: value2
+
+- name: "Set {{ item.key }} in {{ file }}"
+  lineinfile: >
+    dest={{ file }}
+    regexp='^\s*#?\s*{{ item.key }}\s*=.*' 
+    line='{{ item.key }}={{ item.value }}'
+  with_dict: settings
