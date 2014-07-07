@@ -1,0 +1,56 @@
+---
+- name: Configure Networking to use the Identity service for authentication
+  include: ../ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections: 
+    - name: DEFAULT
+      settings:
+      - [ "auth_strategy", "keystone" ]
+    - name: keystone_authtoken
+      settings:
+      - [ "auth_uri", "http://{{ keystone_host }}:5000" ]
+      - [ "auth_host", "{{ keystone_host }}" ]
+      - [ "auth_protocol", "http" ]
+      - [ "auth_port", "{{ keystone_admin_port }}" ]
+      - [ "admin_tenant_name", "service" ]
+      - [ "admin_user", "neutron" ]
+      - [ "admin_password", "{{ NEUTRON_PASS }}" ]
+
+- name: Configure Networking to use the message broker
+  include: ../ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "rpc_backend", "neutron.openstack.common.rpc.impl_qpid" ]
+      - [ "qpid_hostname", "{{ qpid_host }}" ]
+
+- name: Configure Networking to use the Modular Layer 2 (ML2) plug-in
+  include: ../ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "core_plugin", "ml2" ]
+      - [ "service_plugins", "router" ]
+
+- name: Configure the Modular Layer 2 (ML2) plug-in
+  include: ../ini-settings.yml
+  vars:
+    file: /etc/neutron/plugins/ml2/ml2_conf.ini
+    sections:
+    - name: ml2
+      settings:
+      - [ "type_drivers", "gre" ]
+      - [ "tenant_network_types", "gre" ]
+      - [ "mechanism_drivers", "openvswitch" ]
+    - name: ml2_type_gre
+      settings:
+      - [ "tunnel_id_ranges", "1:1000" ]
+    - name: securitygroup
+      settings:
+      - [ "firewall_driver", "neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver" ]
+      - [ "enable_security_group", "True" ]

@@ -17,43 +17,19 @@
   - openstack-neutron-ml2
   - openstack-neutron-openvswitch
 
-- name: Configure Networking to use the Identity service for authentication
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/neutron/neutron.conf
-    sections: 
-    - name: DEFAULT
-      settings:
-      - [ "auth_strategy", "keystone" ]
-    - name: keystone_authtoken
-      settings:
-      - [ "auth_uri", "http://{{ keystone_host }}:5000" ]
-      - [ "auth_host", "{{ keystone_host }}" ]
-      - [ "auth_protocol", "http" ]
-      - [ "auth_port", "{{ keystone_admin_port }}" ]
-      - [ "admin_tenant_name", "service" ]
-      - [ "admin_user", "neutron" ]
-      - [ "admin_password", "{{ NEUTRON_PASS }}" ]
+- name: Common neutron configuration
+  include: ../../../tasks/neutron-config/common.yml
 
-- name: Configure Networking to use the message broker
+- name: Configure the Modular Layer 2 (ML2) plug-in
   include: ../../../tasks/ini-settings.yml
   vars:
-    file: /etc/neutron/neutron.conf
+    file: /etc/neutron/plugins/ml2/ml2_conf.ini
     sections:
-    - name: DEFAULT
+    - name: ovs
       settings:
-      - [ "rpc_backend", "neutron.openstack.common.rpc.impl_qpid" ]
-      - [ "qpid_hostname", "{{ qpid_host }}" ]
-
-- name: Configure Networking to use the Modular Layer 2 (ML2) plug-in
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/neutron/neutron.conf
-    sections:
-    - name: DEFAULT
-      settings:
-      - [ "core_plugin", "ml2" ]
-      - [ "service_plugins", "router" ]
+      - [ "local_ip", "{{ ansible_eth1.ipv4.address }}" ]
+      - [ "tunnel_type", "gre" ]
+      - [ "enable_tunneling", "True" ]
 
 - name: Configure the Layer-3 agent 
   include: ../../../tasks/ini-settings.yml
@@ -101,29 +77,6 @@
       settings:
       - [ "service_neutron_metadata_proxy", "true" ]
       - [ "neutron_metadata_proxy_shared_secret", "{{ METADATA_SECRET }}" ]
-
-- name: Configure the Modular Layer 2 (ML2) plug-in
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/neutron/plugins/ml2/ml2_conf.ini
-    sections:
-    - name: ml2
-      settings:
-      - [ "type_drivers", "gre" ]
-      - [ "tenant_network_types", "gre" ]
-      - [ "mechanism_drivers", "openvswitch" ]
-    - name: ml2_type_gre
-      settings:
-      - [ "tunnel_id_ranges", "1:1000" ]
-    - name: ovs
-      settings:
-      - [ "local_ip", "{{ ansible_eth1.ipv4.address }}" ]
-      - [ "tunnel_type", "gre" ]
-      - [ "enable_tunneling", "True" ]
-    - name: securitygroup
-      settings:
-      - [ "firewall_driver", "neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver" ]
-      - [ "enable_security_group", "True" ]
 
 - name: Enable and start the keystone service
   service: name=openvswitch enabled=yes state=started

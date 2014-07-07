@@ -75,36 +75,6 @@
       - [ "connection", "mysql://{{ neutron_db_user }}:{{ NEUTRON_DBPASS }}@{{ db_host }}/{{ neutron_db }}" ]
   notify: Restart neutron services
 
-- name: Configure Networking to use the Identity service for authentication
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/neutron/neutron.conf
-    sections:
-    - name: DEFAULT
-      settings:
-      - [ "auth_strategy", "keystone" ]
-    - name: keystone_authtoken
-      settings:
-      - [ "auth_uri", "http://{{ keystone_host }}:5000" ]
-      - [ "auth_host", "{{ keystone_host }}" ]
-      - [ "auth_protocol", "http" ]
-      - [ "auth_port", "{{ keystone_admin_port }}" ]
-      - [ "admin_tenant_name", "service" ]
-      - [ "admin_user", "neutron" ]
-      - [ "admin_password", "{{ NEUTRON_PASS }}" ]
-  notify: Restart neutron services
-
-- name: Configure Networking to use the message broker
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/neutron/neutron.conf
-    sections:
-    - name: DEFAULT
-      settings:
-      - [ "rpc_backend", "neutron.openstack.common.rpc.impl_qpid" ]
-      - [ "qpid_hostname", "{{ qpid_host }}" ]
-  notify: Restart neutron services
-
 - name: Configure Networking to notify Compute about network topology changes
   include: ../../../tasks/ini-settings.yml
   vars:
@@ -121,46 +91,6 @@
       - [ "nova_admin_auth_url", "http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0" ]
   notify: Restart neutron services
 
-- name: Configure Networking to use the Modular Layer 2 (ML2) plug-in
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/neutron/neutron.conf
-    sections:
-    - name: DEFAULT
-      settings:
-      - [ "core_plugin", "ml2" ]
-      - [ "service_plugins", "router" ]
-  notify: Restart neutron services
-
-- name: Configure ML2 plugin
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/neutron/plugins/ml2/ml2_conf.ini
-    sections:
-    - name: ml2
-      settings:
-      - [ "type_drivers", "gre" ]
-      - [ "tenant_network_types", "gre" ]
-      - [ "mechanism_drivers", "openvswitch" ]
-      - [ "tunnel_id_ranges", "1:1000" ]
-      - [ "firewall_driver", "neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver" ]
-      - [ "enable_security_group", "True" ]
-  notify: Restart neutron services
-
 - name: Configure Compute to use Networking
-  include: ../../../tasks/ini-settings.yml
-  vars:
-    file: /etc/nova/nova.conf
-    sections:
-    - name: DEFAULT
-      settings:
-      - [ "neutron_url", "http://{{ neutron_controller_host }}:{{ neutron_controller_port }}" ]
-      - [ "neutron_auth_strategy", "keystone" ]
-      - [ "neutron_admin_tenant_name", "service" ]
-      - [ "neutron_admin_username", "neutron" ]
-      - [ "neutron_admin_password", "{{ NEUTRON_PASS }}" ]
-      - [ "neutron_admin_auth_url", "http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0" ]
-      - [ "linuxnet_interface_driver", "nova.network.linux_net.LinuxOVSInterfaceDriver" ]
-      - [ "firewall_driver", "nova.virt.firewall.NoopFirewallDriver" ]
-      - [ "security_group_api", "neutron" ]
+  include: ../../../tasks/neutron-config/common-compute.yml
   notify: Restart compute services

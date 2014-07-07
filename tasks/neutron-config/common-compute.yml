@@ -1,0 +1,18 @@
+---
+- name: Configure Compute to use Networking
+  include: ../ini-settings.yml
+  vars:
+    file: /etc/nova/nova.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "network_api_class", "nova.network.neutronv2.api.API" ]
+      - [ "neutron_url", "http://{{ neutron_controller_host }}:{{ neutron_controller_port }}" ]
+      - [ "neutron_auth_strategy", "keystone" ]
+      - [ "neutron_admin_tenant_name", "service" ]
+      - [ "neutron_admin_username", "neutron" ]
+      - [ "neutron_admin_password", "{{ NEUTRON_PASS }}" ]
+      - [ "neutron_admin_auth_url", "http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0" ]
+      - [ "linuxnet_interface_driver", "nova.network.linux_net.LinuxOVSInterfaceDriver" ]
+      - [ "firewall_driver", "nova.virt.firewall.NoopFirewallDriver" ]
+      - [ "security_group_api", "neutron" ]

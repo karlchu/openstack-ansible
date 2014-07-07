@@ -1,0 +1,46 @@
+---
+- name: Enable kernel networking functions
+  include: ../../../tasks/config-settings.yml
+  vars:
+    file: /etc/sysctl.conf
+    settings:
+      net.ipv4.conf.all.rp_filter: 0
+      net.ipv4.conf.default.rp_filter: 0
+- name: Apply changes to sysctl
+  command: sysctl -e -p
+
+- name: Ensure required packages installed
+  yum: "name={{ item }} state=installed"
+  with_items: 
+  - openstack-neutron-ml2
+  - openstack-neutron-openvswitch
+
+- name: Common neutron configuration
+  include: ../../../tasks/neutron-config/common.yml
+
+- name: Configure the Modular Layer 2 (ML2) plug-in
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/plugins/ml2/ml2_conf.ini
+    sections:
+    - name: ovs
+      settings:
+      - [ "local_ip", "{{ ansible_eth1.ipv4.address }}" ]
+      - [ "tunnel_type", "gre" ]
+      - [ "enable_tunneling", "True" ]
+
+- name: Enable and start the keystone service
+  service: name=openvswitch enabled=yes state=started
+
+- name: Ensure integration bridge exist
+  shell: if ! ovs-vsctl br-exists br-int; then ovs-vsctl add-br br-int; fi
+
+- name: Configure Compute to use Networking
+  include: ../../../tasks/neutron-config/common-compute.yml
+  notify: Restart compute services
+
+- name: Ensure symlink to plug-in configuration
+  file: path=/etc/neutron/plugin.ini state=link src=/etc/neutron/plugins/ml2/ml2_conf.ini
+
+- name: Fix packaging bug
+  shell: "sed --in-place=bak 's,plugins/openvswitch/ovs_neutron_plugin.ini,plugin.ini,g' /etc/init.d/neutron-openvswitch-agent"
