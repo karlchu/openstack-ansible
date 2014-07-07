@@ -24,3 +24,7 @@ nova_controller_port: 8774
 
 neutron_controller_host: controller
 neutron_controller_port: 9696
+
+token_auth_env:
+  OS_SERVICE_TOKEN: "{{ KEYSTONE_ADMIN_TOKEN }}"
+  OS_SERVICE_ENDPOINT: "http://localhost:{{ keystone_admin_port }}/v2.0"

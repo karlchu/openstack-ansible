@@ -30,12 +30,11 @@
 
 - name: Create a service entry for the OpenStack Networking
   shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     if ! keystone service-get neutron
     then 
       keystone service-create --name=neutron --type=network --description="OpenStack Networking"
     fi
+  environment: token_auth_env
   delegate_to: "{{ keystone_host }}"
 
 - name: Check OpenStack Networking API endpoint exists
@@ -47,10 +46,9 @@
 - name: Specify API endpoints for network service
   when: check_endpoint_result.rc != 0
   shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     export SERVICE_ID=$(keystone service-list | awk '/ network / {print $2}')
     keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s --internalurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s --adminurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s
+  environment: token_auth_env
   delegate_to: "{{ keystone_host }}"
 
 - name: Ensure relavant packages are installed
@@ -62,10 +60,9 @@
 
 - name: Get Nova admin tenant ID
   shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     keystone tenant-list | awk '/ service / { print $2 }'
   register: nova_admin_tenant_id
+  environment: token_auth_env
   delegate_to: "{{ keystone_host }}"
 
 - name: Configure Networking to use the database

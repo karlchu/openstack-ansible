@@ -61,12 +61,11 @@
 
 - name: Create a service entry for the OpenStack Image Service
   shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     if ! keystone service-get glance
     then 
       keystone service-create --name=glance --type=image --description="OpenStack Image Service"
     fi
+  environment: token_auth_env
   delegate_to: "{{ keystone_host }}"
 
 - name: Check OpenStack Image Service API endpoint exists
@@ -78,10 +77,9 @@
 - name: Specify API endpoints for image service
   when: check_endpoint_result.rc != 0
   shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     export SERVICE_ID=$(keystone service-list | awk '/ image / {print $2}')
     keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ glance_host }}:{{ glance_port }}/v2.0 --internalurl=http://{{ glance_host }}:{{ glance_port }}/v2.0 --adminurl=http://{{ glance_host }}:{{ glance_port }}/v2.0
+  environment: token_auth_env
   delegate_to: "{{ keystone_host }}"
 
 - name: Enable and start the image services

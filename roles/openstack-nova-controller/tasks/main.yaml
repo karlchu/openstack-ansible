@@ -59,12 +59,11 @@
 
 - name: Create a service entry for the OpenStack Compute
   shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     if ! keystone service-get nova
     then 
       keystone service-create --name=nova --type=compute --description="OpenStack Compute"
     fi
+  environment: token_auth_env
   delegate_to: "{{ keystone_host }}"
 
 - name: Check OpenStack Compute API endpoint exists
@@ -76,10 +75,9 @@
 - name: Specify API endpoints for compute service
   when: check_endpoint_result.rc != 0
   shell: |
-    export OS_SERVICE_TOKEN={{ KEYSTONE_ADMIN_TOKEN }}
-    export OS_SERVICE_ENDPOINT=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     export SERVICE_ID=$(keystone service-list | awk '/ compute / {print $2}')
     keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ nova_controller_host }}:{{ nova_controller_port }}/v2.0/%\(tenant_id\)s --internalurl=http://{{ nova_controller_host }}:{{ nova_controller_port }}/v2.0/%\(tenant_id\)s --adminurl=http://{{ nova_controller_host }}:{{ nova_controller_port }}/v2.0/%\(tenant_id\)s
+  environment: token_auth_env
   delegate_to: "{{ keystone_host }}"
 
 - name: Enable and start the nova services
