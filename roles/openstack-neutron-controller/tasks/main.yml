@@ -29,27 +29,20 @@
   delegate_to: "{{ keystone_host }}"
 
 - name: Create a service entry for the OpenStack Networking
-  shell: |
-    if ! keystone service-get neutron
-    then 
-      keystone service-create --name=neutron --type=network --description="OpenStack Networking"
-    fi
-  environment: token_auth_env
+  include: ../../../tasks/keystone_service.yml
+  vars:
+    name: neutron
+    type: network
+    description: "OpenStack Networking"
   delegate_to: "{{ keystone_host }}"
 
-- name: Check OpenStack Networking API endpoint exists
-  shell: "keystone --os-username=admin --os-password={{ ADMIN_PASS }} --os-auth-url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0 --os-tenant-name=admin endpoint-get --service=network"
-  register: check_endpoint_result
-  ignore_errors: True
-  delegate_to: "{{ keystone_host }}"
-
-- name: Specify API endpoints for network service
-  when: check_endpoint_result.rc != 0
-  shell: |
-    export SERVICE_ID=$(keystone service-list | awk '/ network / {print $2}')
-    keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s --internalurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s --adminurl=http://{{ neutron_controller_host }}:{{ neutron_controller_port }}/v2.0/%\(tenant_id\)s
-  environment: token_auth_env
-  delegate_to: "{{ keystone_host }}"
+- name: Create API endpoint for network service
+  include: ../../../tasks/api_endpoint.yml
+  vars:
+    service: network
+    endpoint:
+      host: "{{ neutron_controller_host }}"
+      port: "{{ neutron_controller_port }}"
 
 - name: Ensure relavant packages are installed
   yum: "name={{ item }} state=installed"

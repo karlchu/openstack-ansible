@@ -57,27 +57,21 @@
     endpoint=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
   delegate_to: "{{ keystone_host }}"
 
-- name: Create a service entry for the OpenStack Compute
-  shell: |
-    if ! keystone service-get nova
-    then 
-      keystone service-create --name=nova --type=compute --description="OpenStack Compute"
-    fi
-  environment: token_auth_env
+- name: Create a service entry for the Compute Service
+  include: ../../../tasks/keystone_service.yml
+  vars:
+    name: nova
+    type: compute
+    description: OpenStack Compute
   delegate_to: "{{ keystone_host }}"
 
-- name: Check OpenStack Compute API endpoint exists
-  shell: "keystone --os-username=admin --os-password={{ ADMIN_PASS }} --os-auth-url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0 --os-tenant-name=admin endpoint-get --service=compute"
-  register: check_endpoint_result
-  ignore_errors: True
-  delegate_to: "{{ keystone_host }}"
-
-- name: Specify API endpoints for compute service
-  when: check_endpoint_result.rc != 0
-  shell: |
-    export SERVICE_ID=$(keystone service-list | awk '/ compute / {print $2}')
-    keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ nova_controller_host }}:{{ nova_controller_port }}/v2.0/%\(tenant_id\)s --internalurl=http://{{ nova_controller_host }}:{{ nova_controller_port }}/v2.0/%\(tenant_id\)s --adminurl=http://{{ nova_controller_host }}:{{ nova_controller_port }}/v2.0/%\(tenant_id\)s
-  environment: token_auth_env
+- name: Create API endpoint for compute service
+  include: ../../../tasks/api_endpoint.yml
+  vars:
+    service: compute
+    endpoint:
+      host: "{{ nova_controller_host }}"
+      port: "{{ nova_controller_port }}"
   delegate_to: "{{ keystone_host }}"
 
 - name: Enable and start the nova services

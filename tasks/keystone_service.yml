@@ -1,0 +1,15 @@
+---
+# - name: 
+#   include: ../../../tasks/keystone_service.yml
+#   vars:
+#     name:
+#     type:
+#     description:
+
+- name: Create keystone service '{{ name }}'
+  shell: |
+    if ! keystone service-get {{ name }}
+    then 
+      keystone service-create --name={{ name }} --type={{ type }} --description="{{ description }}"
+    fi
+  environment: token_auth_env

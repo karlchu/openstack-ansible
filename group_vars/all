@@ -28,3 +28,8 @@ neutron_controller_port: 9696
 token_auth_env:
   OS_SERVICE_TOKEN: "{{ KEYSTONE_ADMIN_TOKEN }}"
   OS_SERVICE_ENDPOINT: "http://localhost:{{ keystone_admin_port }}/v2.0"
+
+admin_auth_env:
+  OS_USERNAME: admin
+  OS_PASSWORD: "{{ ADMIN_PASS }}"
+  OS_AUTH_URL: http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
