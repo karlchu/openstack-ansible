@@ -34,18 +34,10 @@
     /usr/bin/nova-manage db_sync
     date >> /etc/nova/db.synced
 
-- name: "Ensure the 'nova' user exists"
-  keystone_user: >
-    user=nova password={{ NOVA_PASS }} email={{ ADMIN_EMAIL }} tenant=service
-    token={{ KEYSTONE_ADMIN_TOKEN }}
-    endpoint=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
-  delegate_to: "{{ keystone_host }}"
-
-- name: "Ensure the 'admin' role exists"
-  keystone_user: >
-    role=admin user=nova tenant=service
-    token={{ KEYSTONE_ADMIN_TOKEN }}
-    endpoint=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+- include: ../../../tasks/create-service-user.yml
+  vars:
+    username: nova
+    password: "{{ NOVA_PASS }}"
   delegate_to: "{{ keystone_host }}"
 
 - name: Create a service entry for the Compute Service

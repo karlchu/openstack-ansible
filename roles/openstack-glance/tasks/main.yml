@@ -36,18 +36,10 @@
     /usr/bin/glance-manage db_sync
     date >> /etc/glance/db.synced
 
-- name: "Ensure the 'glance' user exists"
-  keystone_user: >
-    user=glance password={{ GLANCE_PASS }} email={{ ADMIN_EMAIL }} tenant=service
-    token={{ KEYSTONE_ADMIN_TOKEN }}
-    endpoint=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
-  delegate_to: "{{ keystone_host }}"
-
-- name: "Ensure the 'admin' role exists"
-  keystone_user: >
-    role=admin user=glance tenant=service
-    token={{ KEYSTONE_ADMIN_TOKEN }}
-    endpoint=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+- include: ../../../tasks/create-service-user.yml
+  vars:
+    username: glance
+    password: "{{ GLANCE_PASS }}"
   delegate_to: "{{ keystone_host }}"
 
 - name: Create a service entry for the OpenStack Image Service
