@@ -19,20 +19,11 @@
     backup=yes
   notify: Restart glance-registry service
 
-- name: Create the glance database
-  mysql_db: name={{ glance_db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
-- name: Ensure glance database user exist
-  mysql_user: |
-    name={{ glance_db_user }}
-    password={{ GLANCE_DBPASS }}
-    host={{ item }}
-    priv={{ glance_db }}.*:ALL
-    login_host={{ db_host }}
-    login_user=root
-    login_password={{ MYSQL_ROOT_PASSWORD }}
-  with_items:
-  - localhost
-  - "%"
+- include: ../../../tasks/create-database-and-user.yml
+  vars:
+    db_name: "{{ glance_db }}"
+    db_user: "{{ glance_db_user }}"
+    db_password: "{{ GLANCE_DBPASS }}"
 
 - name: Change ownership of all files to glance
   file: path=/etc/glance recurse=yes owner=glance group=glance state=directory

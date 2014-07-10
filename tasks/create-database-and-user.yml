@@ -1,0 +1,21 @@
+---
+# - include: ../../../tasks/create-database-and-user.yml
+#   vars:
+#     db_name:
+#     db_user:
+#     db_password:
+
+- name: "Create the '{{ db_name }}' database"
+  mysql_db: name={{ db_name }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
+- name: "Ensure '{{ db_user }}' database user exist"
+  mysql_user: |
+    name={{ db_user }}
+    password={{ db_password }}
+    host={{ item }}
+    priv={{ db_name }}.*:ALL
+    login_host={{ db_host }}
+    login_user=root
+    login_password={{ MYSQL_ROOT_PASSWORD }}
+  with_items:
+  - localhost
+  - "%"

@@ -1,18 +1,9 @@
 ---
-- name: Create the neutron database
-  mysql_db: name={{ neutron_db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
-- name: Ensure neutron database user exist
-  mysql_user: |
-    name={{ neutron_db_user }}
-    password={{ NEUTRON_DBPASS }}
-    host={{ item }}
-    priv={{ neutron_db }}.*:ALL
-    login_host={{ db_host }}
-    login_user=root
-    login_password={{ MYSQL_ROOT_PASSWORD }}
-  with_items:
-  - localhost
-  - "%"
+- include: ../../../tasks/create-database-and-user.yml
+  vars:
+    db_name: "{{ neutron_db }}"
+    db_user: "{{ neutron_db_user }}"
+    db_password: "{{ NEUTRON_DBPASS }}"
 
 - name: "Ensure the 'neutron' user exists"
   keystone_user: >

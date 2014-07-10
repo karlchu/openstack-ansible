@@ -17,20 +17,11 @@
     backup=yes
   notify: Restart nova services
 
-- name: Create the nova database
-  mysql_db: name={{ nova_db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
-- name: Ensure nova database user exist
-  mysql_user: |
-    name={{ nova_db_user }}
-    password={{ NOVA_DBPASS }}
-    host={{ item }}
-    priv={{ nova_db }}.*:ALL
-    login_host={{ db_host }}
-    login_user=root
-    login_password={{ MYSQL_ROOT_PASSWORD }}
-  with_items:
-  - localhost
-  - "%"
+- include: ../../../tasks/create-database-and-user.yml
+  vars:
+    db_name: "{{ nova_db }}"
+    db_user: "{{ nova_db_user }}"
+    db_password: "{{ NOVA_DBPASS }}"
 
 - name: Change ownership of all files to nova
   file: path=/etc/nova recurse=yes owner=nova group=nova state=directory

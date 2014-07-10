@@ -12,20 +12,11 @@
     backup=yes
   notify: Restart keystone service
 
-- name: Create the keystone database
-  mysql_db: name={{ keystone_db }} login_user=root login_password={{ MYSQL_ROOT_PASSWORD }}
-- name: Ensure keystone database user exist
-  mysql_user: |
-    name={{ keystone_db_user }}
-    password={{ KEYSTONE_DBPASS }}
-    host={{ item }}
-    priv={{ keystone_db }}.*:ALL
-    login_host={{ db_host }}
-    login_user=root
-    login_password={{ MYSQL_ROOT_PASSWORD }}
-  with_items:
-  - localhost
-  - "%"
+- include: ../../../tasks/create-database-and-user.yml
+  vars:
+    db_name: "{{ keystone_db }}"
+    db_user: "{{ keystone_db_user }}"
+    db_password: "{{ KEYSTONE_DBPASS }}"
 
 - name: Change ownership of all files to keystone
   file: path=/etc/keystone recurse=yes owner=keystone group=keystone state=directory
