@@ -1,0 +1,4 @@
+---
+- name: Restart nova-api service on the controller node
+  service: name=openstack-nova-api  state=restarted
+  delegate_to: "{{ nova_controller_host }}"

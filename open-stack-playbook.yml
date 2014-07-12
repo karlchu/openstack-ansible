@@ -23,3 +23,8 @@
   user: root
   roles:
   - openstack-neutron-network
+
+- hosts: controller
+  user: root
+  roles:
+  - openstack-external-network

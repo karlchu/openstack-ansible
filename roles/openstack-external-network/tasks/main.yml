@@ -1,0 +1,14 @@
+---
+- name: External network
+  quantum_network: >
+    name=ext-net
+    state=present
+    shared=true
+    router_external=yes
+    provider_network_type=gre
+    provider_segmentation_id=1
+    auth_url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+    login_username=admin
+    login_password={{ ADMIN_PASS }}
+    login_tenant_name=admin
+
