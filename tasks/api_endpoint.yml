@@ -6,10 +6,11 @@
 #     endpoint:
 #       host: "{{ neutron_controller_host }}"
 #       port: "{{ neutron_controller_port }}"
+#       path: ""
 #       admin_port: "{{ neutron_controller_port }}"
 
 - name: "Check if API endpoint exists for service '{{ service }}'"
-  shell: "keystone --os-tenant-name=admin endpoint-get --service={{ service }}"
+  shell: "keystone endpoint-get --service={{ service }}"
   register: check_endpoint_result
   ignore_errors: True
   environment: admin_auth_env
@@ -19,6 +20,6 @@
   when: check_endpoint_result.rc != 0
   shell: |
     export SERVICE_ID=$(keystone service-list | awk '/ {{ service }} / {print $2}')
-    keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ endpoint.host }}:{{ endpoint.port }}/v2.0/%\(tenant_id\)s --internalurl=http://{{ endpoint.host }}:{{ endpoint.port }}/v2.0/%\(tenant_id\)s --adminurl=http://{{ endpoint.host }}:{{ endpoint.admin_port | default(endpoint.port) }}/v2.0/%\(tenant_id\)s
+    keystone endpoint-create --service-id=${SERVICE_ID} --publicurl=http://{{ endpoint.host }}:{{ endpoint.port }}{{ endpoint.path | default('') }} --internalurl=http://{{ endpoint.host }}:{{ endpoint.port }}{{ endpoint.path | default('') }} --adminurl=http://{{ endpoint.host }}:{{ endpoint.admin_port | default(endpoint.port) }}{{ endpoint.path | default('') }}
   environment: token_auth_env
   delegate_to: "{{ keystone_host }}"

@@ -104,4 +104,5 @@
     endpoint:
       host: "{{ keystone_host }}"
       port: "{{ keystone_port }}"
+      path: "/v2.0"
       admin_port: "{{ keystone_admin_port }}"

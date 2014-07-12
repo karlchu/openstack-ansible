@@ -51,6 +51,36 @@
       - [ "connection", "mysql://{{ neutron_db_user }}:{{ NEUTRON_DBPASS }}@{{ db_host }}/{{ neutron_db }}" ]
   notify: Restart neutron services
 
+- name: Configure Networking to use the identity service for authentication
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "auth_strategy", "keystone" ]
+    - name: keystone_authtoken
+      settings:
+      - [ "auth_uri", "http://{{ keystone_host }}:{{ keystone_port }}" ]
+      - [ "auth_host", "{{ keystone_host }}" ]
+      - [ "auth_protocol", "http" ]
+      - [ "auth_port", "{{ keystone_admin_port }}" ]
+      - [ "admin_tenant_name", "service" ]
+      - [ "admin_user", "neutron" ]
+      - [ "admin_password", "{{ NEUTRON_PASS }}" ]
+  notify: Restart neutron services
+
+- name: Configure Networking to use the message broker
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "rpc_backend", "neutron.openstack.common.rpc.impl_qpid" ]
+      - [ "qpid_hostname", "{{ keystone_host }}" ]
+  notify: Restart neutron services
+
 - name: Configure Networking to notify Compute about network topology changes
   include: ../../../tasks/ini-settings.yml
   vars:
@@ -67,6 +97,38 @@
       - [ "nova_admin_auth_url", "http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0" ]
   notify: Restart neutron services
 
-- name: Configure Compute to use Networking
-  include: ../../../tasks/neutron-config/common-compute.yml
-  notify: Restart compute services
+- name: Configure Networking to use the Modular Layer 2 (ML2) plug-in and associated services
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/neutron.conf
+    sections:
+    - name: DEFAULT
+      settings:
+      - [ "core_plugin", "ml2" ]
+      - [ "service_plugins", "router" ]
+  notify: Restart neutron services
+
+- name: Configure the ML2 plug-in
+  include: ../../../tasks/ini-settings.yml
+  vars:
+    file: /etc/neutron/plugins/ml2/ml2_conf.ini
+    sections:
+    - name: ml2
+      settings: 
+      - [ "type_drivers", "gre" ]
+      - [ "tenant_network_types", "gre" ]
+      - [ "mechanism_drivers", "openvswitch" ]
+    - name: ml2_type_gre
+      settings: 
+      - [ "tunnel_id_ranges", "1:1000" ]
+    - name: securitygroup
+      settings: 
+      - [ "firewall_driver", "neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver" ]
+      - [ "enable_security_group", "True" ]
+  notify: Restart neutron services
+
+- name: Ensure symlink to plug-in configuration
+  file: path=/etc/neutron/plugin.ini state=link src=/etc/neutron/plugins/ml2/ml2_conf.ini
+
+- name: Enable and start neutron services
+  service: name=neutron-server enabled=yes state=started

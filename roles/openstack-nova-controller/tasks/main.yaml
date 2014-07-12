@@ -55,6 +55,7 @@
     endpoint:
       host: "{{ nova_controller_host }}"
       port: "{{ nova_controller_port }}"
+      path: "/v2/%\\(tenant_id\\)s"
   delegate_to: "{{ keystone_host }}"
 
 - name: Enable and start the nova services

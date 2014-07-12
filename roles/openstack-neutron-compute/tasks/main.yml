@@ -17,6 +17,7 @@
 
 - name: Common neutron configuration
   include: ../../../tasks/neutron-config/common.yml
+  notify: 
 
 - name: Configure the Modular Layer 2 (ML2) plug-in
   include: ../../../tasks/ini-settings.yml

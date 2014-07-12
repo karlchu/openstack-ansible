@@ -33,3 +33,4 @@ admin_auth_env:
   OS_USERNAME: admin
   OS_PASSWORD: "{{ ADMIN_PASS }}"
   OS_AUTH_URL: http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+  OS_TENANT_NAME: admin
