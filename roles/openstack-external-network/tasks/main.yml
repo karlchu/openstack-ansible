@@ -12,7 +12,8 @@
     login_password={{ ADMIN_PASS }}
     login_tenant_name=admin
 
-- quantum_subnet: >
+- name: Subnet for external network
+  quantum_subnet: >
     name=ext-subnet
     network_name=ext-net
     tenant_name=admin
@@ -25,3 +26,11 @@
     login_username=admin
     login_password={{ ADMIN_PASS }}
     login_tenant_name=admin
+
+- name: Demo tenant network
+  shell: |
+    if ! neutron net-show demo-net
+    then 
+      neutron net-create demo-net
+    fi
+  environment: demo_auth_env

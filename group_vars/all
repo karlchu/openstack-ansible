@@ -34,3 +34,9 @@ admin_auth_env:
   OS_PASSWORD: "{{ ADMIN_PASS }}"
   OS_AUTH_URL: http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
   OS_TENANT_NAME: admin
+
+demo_auth_env:
+  OS_USERNAME: demo
+  OS_PASSWORD: "{{ DEMO_PASS }}"
+  OS_AUTH_URL: http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+  OS_TENANT_NAME: demo
