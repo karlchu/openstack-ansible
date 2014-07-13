@@ -80,7 +80,7 @@
 
 - name: "Ensure the 'admin' role exists"
   keystone_user: >
-    role=demo user=demo tenant=demo
+    role=admin user=demo tenant=demo
     token={{ KEYSTONE_ADMIN_TOKEN }}
     endpoint=http://localhost:{{ keystone_admin_port }}/v2.0
 
