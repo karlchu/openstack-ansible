@@ -18,16 +18,17 @@
     network_name=ext-net
     tenant_name=admin
     state=present
-    allocation_pool_start=203.0.113.101
-    allocation_pool_end=203.0.113.200
-    cidr=203.0.113.0/24
+    allocation_pool_start=10.0.2.101
+    allocation_pool_end=10.0.2.200
+    cidr=10.0.2.0/24
     enable_dhcp=False
-    gateway_ip=203.0.113.1
+    gateway_ip=10.0.2.1
+    auth_url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
     login_username=admin
     login_password={{ ADMIN_PASS }}
     login_tenant_name=admin
 
-- name:
+- name: Create the demo network and subnet
   include: ../../../tasks/create-network-and-subnet.yml
   vars:
     name: demo-net
@@ -35,3 +36,29 @@
     subnet_cidr: 192.168.1.0/24
     subnet_gateway: 192.168.1.1
     auth_env: "{{ demo_auth_env }}"
+
+- name: Create a router for the demo network
+  quantum_router: >
+    name=demo-router
+    auth_url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+    login_username=demo
+    login_password={{ DEMO_PASS }}
+    login_tenant_name=demo
+
+- name: Attach the router to the demo tenant subnet
+  quantum_router_interface: >
+    router_name=demo-router
+    subnet_name=demo-subnet
+    auth_url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+    login_username=demo
+    login_password={{ DEMO_PASS }}
+    login_tenant_name=demo
+
+- name: Attach the router to the external network
+  quantum_router_gateway: >
+    router_name=demo-router
+    network_name=ext-net
+    auth_url=http://{{ keystone_host }}:{{ keystone_admin_port }}/v2.0
+    login_username=demo
+    login_password={{ DEMO_PASS }}
+    login_tenant_name=demo
