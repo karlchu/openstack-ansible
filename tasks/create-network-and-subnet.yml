@@ -1,0 +1,31 @@
+---
+# - name:
+#   include: ../../../tasks/create-network-and-subnet.yml
+#   vars:
+#     name: "{{ network_name }}"
+#     subnet_name: "{{ subnet_name }}"
+#     subnet_cidr: 192.168.1.0/24
+#     subnet_gateway: 192.168.1.1
+#     auth_env: "{{ auth_env }}" # Must be quoted if passed as a variable
+
+- name: "Check if network '{{ name }}' exists"
+  shell: "neutron net-show {{ name }}"
+  register: check_network_result
+  ignore_errors: True
+  environment: auth_env
+
+- name: "Create network '{{ name }}'"
+  when: check_network_result.rc != 0
+  shell: neutron net-create {{ name }}
+  environment: auth_env
+
+- name: "Check if subnet '{{ name }}' exists"
+  shell: "neutron subnet-show {{ subnet_name }}"
+  register: check_subnet_result
+  ignore_errors: True
+  environment: auth_env
+
+- name: "Create subnet '{{ subnet_name}}' in network '{{ name }}'"
+  when: check_subnet_result.rc != 0
+  shell: neutron subnet-create {{ name }} --name {{ subnet_name }} --gateway {{ subnet_gateway }} {{ subnet_cidr }}
+  environment: auth_env

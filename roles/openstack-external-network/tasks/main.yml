@@ -27,21 +27,11 @@
     login_password={{ ADMIN_PASS }}
     login_tenant_name=admin
 
-- name: Demo tenant network
-  shell: |
-    if ! neutron net-show demo-net
-    then 
-      neutron net-create demo-net
-    fi
-  environment: demo_auth_env
-
-- name: Subnet for demo tenant network
-  quantum_subnet: >
-    name=demo-subnet
-    network_name=demo-net
-    state=present
-    cidr=192.168.1.0/24
-    gateway_ip=192.168.1.1
-    login_username=demo
-    login_password={{ DEMO_PASS }}
-    login_tenant_name=demo
+- name:
+  include: ../../../tasks/create-network-and-subnet.yml
+  vars:
+    name: demo-net
+    subnet_name: demo-subnet
+    subnet_cidr: 192.168.1.0/24
+    subnet_gateway: 192.168.1.1
+    auth_env: "{{ demo_auth_env }}"
